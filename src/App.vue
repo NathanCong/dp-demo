@@ -5,10 +5,20 @@
         <!-- 视频播放测试 -->
         <section class="area">
           <header class="area-header">视频播放测试</header>
-          <div class="area-video"></div>
+          <div class="area-video">
+            <VideoPlayer
+              v-model:is-playing="isPlaying"
+              ref="playerRef"
+            />
+          </div>
           <div class="area-log"></div>
           <div class="area-action">
-            <button>点击播放视频</button>
+            <template v-if="isPlaying">
+              <button @click="stop">点击暂停播放</button>
+            </template>
+            <template v-else>
+              <button @click="play">点击播放视频</button>
+            </template>
           </div>
         </section>
         <!-- 点位移动测试 -->
@@ -24,7 +34,25 @@
   </div>
 </template>
 
-<script></script>
+<script setup>
+import { ref, watch } from 'vue';
+import VideoPlayer from './components/VideoPlayer.vue';
+
+const isPlaying = ref(false)
+const playerRef = ref(null)
+
+watch(isPlaying, (newValue, oldValue) => {
+  console.log('isPlaying', oldValue, '=>', newValue)
+}, { immediate: true })
+
+function play() {
+  playerRef?.value?.play()
+}
+
+function stop() {
+  playerRef?.value?.stop()
+}
+</script>
 
 <style>
 html,
@@ -78,8 +106,7 @@ body,
 .area-video {
   margin-top: 40px;
   width: 100%;
-  height: 800px;
-  background-color: black;
+  box-sizing: border-box;
 }
 
 .area-log {
