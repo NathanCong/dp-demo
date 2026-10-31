@@ -17,6 +17,7 @@ import { TEST_VIDEO_LIST } from '../consts/index'
 
 const videoElement = ref(null)
 let player = null
+const currentIndex = ref(0)
 
 const props = defineProps({
   isPlaying: {
@@ -45,7 +46,17 @@ onMounted(() => {
 
   player.on('pause', () => emit('update:isPlaying', false))
 
-  player.on('ended', () => emit('update:isPlaying', false))
+  player.on('ended', () => {
+    const nextIndex = currentIndex.value + 1
+
+    if (nextIndex < TEST_VIDEO_LIST.length) {
+      const { videoUrl } = TEST_VIDEO_LIST[nextIndex]
+      player.src({ src: videoUrl, type: 'video/mp4' })
+    } else {
+      console.log('全部视频播放完毕')
+      emit('update:isPlaying', false)
+    }
+  })
 
   player.on('error', () => emit('update:isPlaying', false))
 

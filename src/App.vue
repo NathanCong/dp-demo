@@ -29,10 +29,15 @@
         <section class="area">
           <header class="area-header">点位移动测试</header>
           <div class="area-log">
-            <LogPrinter />
+            <LogPrinter ref="moveLogRef" />
           </div>
           <div class="area-action">
-            <button>点击开始移动</button>
+            <template v-if="isMoving">
+              <button>点击停止任务（返回充电）</button>
+            </template>
+            <template v-else>
+              <button>点击开始移动（循环点位）</button>
+            </template>
           </div>
         </section>
     </section>
@@ -41,13 +46,17 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import VideoPlayer from './components/VideoPlayer.vue'
 import LogPrinter from './components/LogPrinter.vue'
+import axios from 'axios'
 
 const isPlaying = ref(false)
 const playerRef = ref(null)
 const playerLogRef = ref(null)
+
+const isMoving = ref(false)
+const moveLogRef = ref(null)
 
 watch(isPlaying, (newStatus) => {
   if (newStatus) {
@@ -72,6 +81,29 @@ function videoSourceChange(currentVideo) {
 function videoError(error) {
   playerLogRef?.value?.print(`错误：${error}\n`)
 }
+
+async function getCurrentMark() {
+  try {
+    const result = await axios.get('http://127.0.0.1:4000/robot/location')
+    moveLogRef?.value?.print(`${JSON.stringify(result)}\n`)
+  } catch (error) {
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+async function getAllMarks() {
+  try {
+    const result = await axios.get('http://127.0.0.1:4000/robot/markers')
+    moveLogRef?.value?.print(`${JSON.stringify(result)}\n`)
+  } catch (error) {
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+onMounted(() => {
+  getCurrentMark()
+  getAllMarks()
+})
 </script>
 
 <style>
