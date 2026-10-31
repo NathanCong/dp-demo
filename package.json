@@ -16,6 +16,7 @@
   "type": "module",
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
+    "postcss-px-to-viewport-8-plugin": "^1.2.5",
     "vite": "^8.3.5"
   },
   "dependencies": {
