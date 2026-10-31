@@ -25,7 +25,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:isPlaying'])
+const emit = defineEmits(['update:isPlaying', 'sourcechange'])
 
 onMounted(() => {
   player = videojs(videoElement.value, {
@@ -48,6 +48,12 @@ onMounted(() => {
   player.on('ended', () => emit('update:isPlaying', false))
 
   player.on('error', () => emit('update:isPlaying', false))
+
+  player.on('loadstart', () => {
+    const source = player.currentSource()
+    const targetVideo = TEST_VIDEO_LIST.find((item) => item.videoUrl === source.src)
+    emit('sourcechange', targetVideo)
+  })
 })
 
 onBeforeUnmount(() => {

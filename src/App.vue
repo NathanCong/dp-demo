@@ -8,10 +8,13 @@
           <div class="area-video">
             <VideoPlayer
               v-model:is-playing="isPlaying"
+              @sourcechange="videoSourceChange"
               ref="playerRef"
             />
           </div>
-          <div class="area-log"></div>
+          <div class="area-log">
+            <LogPrinter ref="playerLogRef" />
+          </div>
           <div class="area-action">
             <template v-if="isPlaying">
               <button @click="stop">点击暂停播放</button>
@@ -24,7 +27,9 @@
         <!-- 点位移动测试 -->
         <section class="area">
           <header class="area-header">点位移动测试</header>
-          <div class="area-log"></div>
+          <div class="area-log">
+            <LogPrinter />
+          </div>
           <div class="area-action">
             <button>点击开始移动</button>
           </div>
@@ -36,13 +41,19 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import VideoPlayer from './components/VideoPlayer.vue';
+import VideoPlayer from './components/VideoPlayer.vue'
+import LogPrinter from './components/LogPrinter.vue'
 
 const isPlaying = ref(false)
 const playerRef = ref(null)
+const playerLogRef = ref(null)
 
-watch(isPlaying, (newValue, oldValue) => {
-  console.log('isPlaying', oldValue, '=>', newValue)
+watch(isPlaying, (newStatus) => {
+  if (newStatus) {
+    playerLogRef?.value?.print('开始播放视频\n')
+  } else {
+    playerLogRef?.value?.print('暂停播放视频\n')
+  }
 }, { immediate: true })
 
 function play() {
@@ -51,6 +62,10 @@ function play() {
 
 function stop() {
   playerRef?.value?.stop()
+}
+
+function videoSourceChange(currentVideo) {
+  playerLogRef?.value?.print(`当前播放的视频：${currentVideo.videoName}\n`)
 }
 </script>
 
@@ -114,6 +129,7 @@ body,
   width: 100%;
   height: 800px;
   background-color: #eee;
+  position: relative;
 }
 
 .area-action {
