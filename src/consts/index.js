@@ -155,3 +155,60 @@ export const TEST_VIDEO_LIST = [
     videoUrl: 'http://127.0.0.1:9000/rag/df_video/Cholangiocarcinoma/10_The_Underestimated_Cholangiocarcinoma_Expert_Interview.mp4',
   },
 ]
+
+export const MARK_LIST = [
+  {
+    index: 1,
+    markName: 'CDZ',
+    markDesc: '充电桩',
+    isAllow: true,
+  },
+  {
+    index: 2,
+    markName: 'T13',
+    markDesc: '主任办公室',
+    isAllow: true,
+  },
+  {
+    index: 3,
+    markName: 'T2',
+    markDesc: '示教室',
+    isAllow: true,
+  },
+  {
+    index: 4,
+    markName: 'T3',
+    markDesc: '二房',
+    isAllow: false,
+  },
+  {
+    index: 5,
+    markName: 'T4',
+    markDesc: '三房',
+    isAllow: false,
+  },
+  {
+    index: 6,
+    markName: 'T5',
+    markDesc: '值班办公室',
+    isAllow: true,
+  },
+  {
+    index: 7,
+    markName: 'T11',
+    markDesc: '休息厅',
+    isAllow: true,
+  },
+  {
+    index: 8,
+    markName: 'T8',
+    markDesc: '护士站',
+    isAllow: true,
+  },
+  {
+    index: 9,
+    markName: 'T12',
+    markDesc: '电梯门',
+    isAllow: true,
+  },
+]

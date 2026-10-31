@@ -28,6 +28,24 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isPlaying', 'sourcechange', 'error'])
 
+async function play() {
+  try {
+    await player?.play()
+  } catch (error) {
+    console.error(error)
+    emit('error', error)
+  }
+}
+
+async function stop() {
+  try {
+    await player?.pause()
+  } catch (error) {
+    console.error(error)
+    emit('error', error)
+  }
+}
+
 onMounted(() => {
   player = videojs(videoElement.value, {
     controls: true,
@@ -52,6 +70,7 @@ onMounted(() => {
     if (nextIndex < TEST_VIDEO_LIST.length) {
       const { videoUrl } = TEST_VIDEO_LIST[nextIndex]
       player.src({ src: videoUrl, type: 'video/mp4' })
+      play()
     } else {
       console.log('全部视频播放完毕')
       emit('update:isPlaying', false)
@@ -73,24 +92,6 @@ onBeforeUnmount(() => {
     player = null
   }
 })
-
-async function play() {
-  try {
-    await player?.play()
-  } catch (error) {
-    console.error(error)
-    emit('error', error)
-  }
-}
-
-async function stop() {
-  try {
-    await player?.pause()
-  } catch (error) {
-    console.error(error)
-    emit('error', error)
-  }
-}
 
 defineExpose({ play, stop })
 </script>

@@ -21,7 +21,7 @@
               <button @click="stop">点击暂停播放</button>
             </template>
             <template v-else>
-              <button @click="play">点击播放视频</button>
+              <button @click="play">点击播放视频（循环播放）</button>
             </template>
           </div>
         </section>
@@ -33,10 +33,10 @@
           </div>
           <div class="area-action">
             <template v-if="isMoving">
-              <button>点击停止任务（返回充电）</button>
+              <button @click="stopMove">点击停止任务（返回充电）</button>
             </template>
             <template v-else>
-              <button>点击开始移动（循环点位）</button>
+              <button @click="startMove">点击开始移动（循环点位）</button>
             </template>
           </div>
         </section>
@@ -50,6 +50,7 @@ import { ref, watch, onMounted } from 'vue';
 import VideoPlayer from './components/VideoPlayer.vue'
 import LogPrinter from './components/LogPrinter.vue'
 import axios from 'axios'
+import { MARK_LIST } from './consts/index.js'
 
 const isPlaying = ref(false)
 const playerRef = ref(null)
@@ -60,9 +61,9 @@ const moveLogRef = ref(null)
 
 watch(isPlaying, (newStatus) => {
   if (newStatus) {
-    playerLogRef?.value?.print('开始播放视频\n')
+    playerLogRef?.value?.print('\n开始播放视频\n')
   } else {
-    playerLogRef?.value?.print('暂停播放视频\n')
+    playerLogRef?.value?.print('\n暂停播放视频\n')
   }
 }, { immediate: true })
 
@@ -82,28 +83,129 @@ function videoError(error) {
   playerLogRef?.value?.print(`错误：${error}\n`)
 }
 
-async function getCurrentMark() {
+async function getCurrentMarkName() {
   try {
-    const result = await axios.get('http://127.0.0.1:4000/robot/location')
-    moveLogRef?.value?.print(`${JSON.stringify(result)}\n`)
+    const { data } = await axios.get('http://127.0.0.1:4000/robot/location')
+    const { near_markers } = data
+    const { marker_name } = near_markers[0]
+    return marker_name
   } catch (error) {
     moveLogRef?.value?.print(`错误：${error}\n`)
   }
 }
 
-async function getAllMarks() {
+async function getAllMarkNames() {
   try {
-    const result = await axios.get('http://127.0.0.1:4000/robot/markers')
-    moveLogRef?.value?.print(`${JSON.stringify(result)}\n`)
+    const { data } = await axios.get('http://127.0.0.1:4000/robot/markers')
+    const marker_names = (data || []).map((item) => item.marker_name)
+    return marker_names
   } catch (error) {
     moveLogRef?.value?.print(`错误：${error}\n`)
   }
 }
 
-onMounted(() => {
-  getCurrentMark()
-  getAllMarks()
-})
+async function getMoveStatus() {
+  try {
+    const { data } = await axios.get('http://127.0.0.1:4000/robot/status')
+    const { move_status } = data
+    return move_status
+  } catch (error) {
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+function waitMoving() {
+  return new Promise((resolve, reject) => {
+    let timer = setInterval(() => {
+      getMoveStatus()
+        .then((status) => {
+          if (status !== 'running') {
+            clearInterval(timer)
+            resolve()
+          }
+        })
+        .catch((err) => {
+          clearInterval(timer)
+          reject(err)
+        })
+    }, 1000)
+  })
+}
+
+async function moveToMark(marker) {
+  try {
+    const { data } = await axios.post('http://127.0.0.1:4000/robot/move', { marker })
+  } catch (error) {
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+async function startMove() {
+  moveLogRef?.value?.print('\n开始循环点位\n')
+  try {
+    // 获取当前点位
+    let currentMarkName = await getCurrentMarkName()
+    const { markDesc } = MARK_LIST.find((item) => item.markName === currentMarkName) || {}
+    moveLogRef?.value?.print(`当前点位：${currentMarkName}（${markDesc}）\n`)
+    // 获取所有点位
+    let allMarkNames = await getAllMarkNames()
+    // 点位排序
+    allMarkNames = allMarkNames.sort((a, b) => {
+      const indexA = MARK_LIST.findIndex((item) => item.markName === a)
+      const indexB = MARK_LIST.findIndex((item) => item.markName === b)
+
+      return indexA - indexB
+    })
+    moveLogRef?.value?.print(`所有点位：${allMarkNames}\n`)
+    // 设置移动状态
+    isMoving.value = true
+    // 遍历所有点位
+    for (let markName of allMarkNames) {
+      const { isAllow, markDesc } = MARK_LIST.find((item) => item.markName === markName) || {}
+      // 跳过当前点位
+      if (markName === currentMarkName) {
+        continue
+      }
+      // 跳过不允许到达的点位
+      if (isAllow === false) {
+        continue
+      }
+      // 移动到点位
+      moveToMark(markName)
+      moveLogRef?.value?.print(`正在去往：${markName}（${markDesc}）...\n`)
+      // 等待执行完成
+      await waitMoving()
+      moveLogRef?.value?.print(`已经到达：${markName}（${markDesc}）\n`)
+    }
+  } catch(error) {
+    isMoving.value = false
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+async function stopMove() {
+  moveLogRef?.value?.print('\n停止循环点位\n')
+  try {
+    // 获取当前点位
+    let currentMarkName = await getCurrentMarkName()
+    const { markDesc } = MARK_LIST.find((item) => item.markName === currentMarkName) || {}
+    moveLogRef?.value?.print(`当前点位：${currentMarkName}（${markDesc}）\n`)
+    // 回到充电桩
+    const markName = 'CDZ'
+    const { markDesc: newMarkDesc } = MARK_LIST.find((item) => item.markName === markName) || {}
+    moveToMark('CDZ')
+    moveLogRef?.value?.print(`正在去往：${markName}（${newMarkDesc}）...\n`)
+    // 等待执行完成
+    await waitMoving()
+    moveLogRef?.value?.print(`已经到达：${markName}（${newMarkDesc}）\n`)
+    // 还原按钮状态
+    isMoving.value = false
+  } catch(error) {
+    moveLogRef?.value?.print(`错误：${error}\n`)
+  }
+}
+
+onMounted(() => {})
 </script>
 
 <style>

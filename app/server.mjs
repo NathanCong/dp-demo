@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import { handle, robotRequest } from './utils.mjs'
 
 /**
@@ -9,6 +10,7 @@ const app = express()
 /**
  * 加载插件
  */
+app.use(cors())
 app.use(express.json())
 
 /**
