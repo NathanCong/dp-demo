@@ -1,14 +1,22 @@
 <template>
-  <div class="log-wrapper">{{ logs }}</div>
+  <div class="log-wrapper" ref="logElement">{{ logs }}</div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 
 let logs = ref('')
+const logElement = ref(null)
 
-function print(content) {
+async function print(content) {
   logs.value += content
+
+  await nextTick()
+
+  const element = logElement.value
+  if (element) {
+    element.scrollTop = element.scrollHeight
+  }
 }
 
 defineExpose({ print })
@@ -23,5 +31,6 @@ defineExpose({ print })
   left: 32px;
   font-size: 30px;
   white-space: pre-line;
+  overflow-y: auto;
 }
 </style>

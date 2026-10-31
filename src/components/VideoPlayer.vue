@@ -25,7 +25,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:isPlaying', 'sourcechange'])
+const emit = defineEmits(['update:isPlaying', 'sourcechange', 'error'])
 
 onMounted(() => {
   player = videojs(videoElement.value, {
@@ -68,6 +68,7 @@ async function play() {
     await player?.play()
   } catch (error) {
     console.error(error)
+    emit('error', error)
   }
 }
 
@@ -76,6 +77,7 @@ async function stop() {
     await player?.pause()
   } catch (error) {
     console.error(error)
+    emit('error', error)
   }
 }
 

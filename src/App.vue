@@ -9,6 +9,7 @@
             <VideoPlayer
               v-model:is-playing="isPlaying"
               @sourcechange="videoSourceChange"
+              @error="videoError"
               ref="playerRef"
             />
           </div>
@@ -65,7 +66,11 @@ function stop() {
 }
 
 function videoSourceChange(currentVideo) {
-  playerLogRef?.value?.print(`当前播放的视频：${currentVideo.videoName}\n`)
+  playerLogRef?.value?.print(`准备播放的视频：${currentVideo.videoName}\n`)
+}
+
+function videoError(error) {
+  playerLogRef?.value?.print(`错误：${error}\n`)
 }
 </script>
 
